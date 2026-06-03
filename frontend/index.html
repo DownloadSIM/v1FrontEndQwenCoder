@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download SIM - eSIM Store</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        /* Fixed Header */
+        .header-fixed {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 15px 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .filter-checkbox:hover {
+            background: #e8e8e8;
+        }
+
+        .filter-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .find-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .find-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .find-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Country Dropdown */
+        .country-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1001;
+        }
+
+        .country-dropdown.active {
+            display: block;
+        }
+
+        .country-option {
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+
+        .country-option:hover {
+            background: #f5f5f5;
+        }
+
+        .country-option.selected {
+            background: #e8f0fe;
+        }
+
+        /* Selected Countries */
+        .selected-countries {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            min-height: 30px;
+        }
+
+        .country-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .country-chip .remove {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+        }
+
+        .country-chip .remove:hover {
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        /* Results Grid */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        /* Product Card */
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .product-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .product-specs {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .spec-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .spec-icon {
+            font-size: 18px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .compare-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-fixed {
+                padding: 12px 15px;
+            }
+
+            .search-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .find-btn {
+                width: 100%;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fixed Header -->
+    <div class="header-fixed">
+        <div class="header-content">
+            <div class="logo">📱 Download SIM</div>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="countrySearch" placeholder="Search countries..." autocomplete="off">
+                    <span class="search-icon">🔍</span>
+                    <div class="country-dropdown" id="countryDropdown"></div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="globalPlans" onchange="handlePlanTypeChange('global')">
+                        Global Plans
+                    </label>
+                    <label class="filter-checkbox">
+                        <input type="checkbox" id="regionalPlans" onchange="handlePlanTypeChange('regional')">
+                        Regional Plans
+                    </label>
+                </div>
+
+                <button class="find-btn" id="findPlansBtn" onclick="findPlans()">Find Plans</button>
+            </div>
+
+            <div class="selected-countries" id="selectedCountries"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Empty State (shown by default) -->
+        <div class="empty-state" id="emptyState">
+            <h2>Please select your travel destinations</h2>
+            <p>Search for countries above and click "Find Plans" to see available eSIM options</p>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching for plans...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" id="errorState" style="display: none;"></div>
+
+        <!-- Results Grid -->
+        <div class="results-grid" id="resultsGrid" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Configuration - UPDATE THIS WITH YOUR NETLIFY BACKEND URL
+        const API_BASE_URL = 'https://admin.downloadsim.com/.netlify/functions/esim-search';
+        
+        // State
+        let selectedCountries = [];
+        let allCountries = [];
+        let searchResults = [];
+        let planTypeFilter = null; // 'global', 'regional', or null
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            const searchInput = document.getElementById('countrySearch');
+            const dropdown = document.getElementById('countryDropdown');
+
+            searchInput.addEventListener('focus', () => {
+                if (allCountries.length === 0) {
+                    loadCountries();
+                }
+                dropdown.classList.add('active');
+            });
+
+            searchInput.addEventListener('input', (e) => {
+                filterCountries(e.target.value);
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.search-box')) {
+                    dropdown.classList.remove('active');
+                }
+            });
+        }
+
+        async function loadCountries() {
+            try {
+                // Fetch from eSIMaccess API through our backend
+                const response = await fetch(`${API_BASE_URL}?action=countries`);
+                const data = await response.json();
+                
+                if (data.data) {
+                    // Extract unique countries from locationNetworkList
+                    const countrySet = new Set();
+                    data.data.forEach(product => {
+                        if (product.locationNetworkList) {
+                            product.locationNetworkList.forEach(loc => {
+                                if (loc.locationName) {
+                                    countrySet.add(loc.locationName);
+                                }
+                            });
+                        }
+                    });
+                    
+                    allCountries = Array.from(countrySet).sort();
+                    renderCountryDropdown(allCountries);
+                }
+            } catch (error) {
+                console.error('Failed to load countries:', error);
+                // Fallback to basic list
+                allCountries = ['United States', 'United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Japan', 'China', 'Thailand', 'Australia'];
+                renderCountryDropdown(allCountries);
+            }
+        }
+
+        function renderCountryDropdown(countries) {
+            const dropdown = document.getElementById('countryDropdown');
+            dropdown.innerHTML = countries.map(country => `
+                <div class="country-option ${selectedCountries.includes(country) ? 'selected' : ''}" 
+                     onclick="toggleCountry('${country}')">
+                    <input type="checkbox" ${selectedCountries.includes(country) ? 'checked' : ''} onclick="event.stopPropagation()">
+                    ${country}
+                </div>
+            `).join('');
+        }
+
+        function filterCountries(query) {
+            const filtered = allCountries.filter(country => 
+                country.toLowerCase().includes(query.toLowerCase())
+            );
+            renderCountryDropdown(filtered);
+        }
+
+        function toggleCountry(country) {
+            const index = selectedCountries.indexOf(country);
+            if (index > -1) {
+                selectedCountries.splice(index, 1);
+            } else {
+                selectedCountries.push(country);
+            }
+            updateSelectedCountriesDisplay();
+            
+            // Re-render dropdown to show selection state
+            const searchInput = document.getElementById('countrySearch').value;
+            filterCountries(searchInput);
+        }
+
+        function updateSelectedCountriesDisplay() {
+            const container = document.getElementById('selectedCountries');
+            if (selectedCountries.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = selectedCountries.map(country => `
+                <div class="country-chip">
+                    ${country}
+                    <span class="remove" onclick="toggleCountry('${country}')">×</span>
+                </div>
+            `).join('');
+        }
+
+        function handlePlanTypeChange(type) {
+            const globalCheckbox = document.getElementById('globalPlans');
+            const regionalCheckbox = document.getElementById('regionalPlans');
+
+            if (type === 'global' && globalCheckbox.checked) {
+                regionalCheckbox.checked = false;
+                planTypeFilter = 'global';
+            } else if (type === 'regional' && regionalCheckbox.checked) {
+                globalCheckbox.checked = false;
+                planTypeFilter = 'regional';
+            } else {
+                planTypeFilter = null;
+            }
+        }
+
+        async function findPlans() {
+            const emptyState = document.getElementById('emptyState');
+            const loadingState = document.getElementById('loadingState');
+            const errorState = document.getElementById('errorState');
+            const resultsGrid = document.getElementById('resultsGrid');
+            const findBtn = document.getElementById('findPlansBtn');
+
+            // Reset states
+            emptyState.style.display = 'none';
+            errorState.style.display = 'none';
+            resultsGrid.style.display = 'none';
+            
+            // Show loading
+            loadingState.style.display = 'block';
+            findBtn.disabled = true;
+
+            try {
+                // Build search parameters
+                const params = new URLSearchParams();
+                
+                if (selectedCountries.length > 0) {
+                    selectedCountries.forEach(country => {
+                        params.append('locationName', country);
+                    });
+                }
+
+                if (planTypeFilter === 'global') {
+                    params.append('slugPrefix', 'GL-');
+                }
+
+                const url = `${API_BASE_URL}?${params.toString()}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                searchResults = result.data || [];
+
+                // Sort results
+                searchResults = sortResults(searchResults);
+
+                // Display results
+                displayResults(searchResults);
+
+            } catch (error) {
+                console.error('Search failed:', error);
+                errorState.textContent = `⚠️ Search failed: ${error.message}`;
+                errorState.style.display = 'block';
+            } finally {
+                loadingState.style.display = 'none';
+                findBtn.disabled = false;
+            }
+        }
+
+        function sortResults(results) {
+            return results.sort((a, b) => {
+                // Global plans first
+                const aIsGlobal = a.slug?.startsWith('GL-') ? 1 : 0;
+                const bIsGlobal = b.slug?.startsWith('GL-') ? 1 : 0;
+                if (bIsGlobal - aIsGlobal !== 0) return bIsGlobal - aIsGlobal;
+
+                // Number of countries (ascending)
+                const aCountries = a.locationNetworkList?.length || 0;
+                const bCountries = b.locationNetworkList?.length || 0;
+                if (aCountries - bCountries !== 0) return aCountries - bCountries;
+
+                // First 3 letters of slug
+                const aSlug = (a.slug || '').substring(0, 3);
+                const bSlug = (b.slug || '').substring(0, 3);
+                if (aSlug < bSlug) return -1;
+                if (aSlug > bSlug) return 1;
+
+                // Duration (ascending)
+                if (a.duration - b.duration !== 0) return a.duration - b.duration;
+
+                // Data volume (ascending)
+                const aData = a.dataVolume || 0;
+                const bData = b.dataVolume || 0;
+                if (aData - bData !== 0) return aData - bData;
+
+                // Price (ascending)
+                return a.price - b.price;
+            });
+        }
+
+        function displayResults(results) {
+            const resultsGrid = document.getElementById('resultsGrid');
+            
+            if (results.length === 0) {
+                resultsGrid.innerHTML = '<p style="color: white; text-align: center; grid-column: 1/-1;">No plans found matching your criteria.</p>';
+                resultsGrid.style.display = 'block';
+                return;
+            }
+
+            resultsGrid.innerHTML = results.map((product, index) => {
+                const countryCount = product.locationNetworkList?.length || 0;
+                const dataGB = (product.dataVolume / 1024).toFixed(1);
+                const maxSpeed = product.speed || '4G';
+                
+                return `
+                    <div class="product-card">
+                        <div class="product-header">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-price">$${product.price}</div>
+                        </div>
+                        
+                        <div class="product-specs">
+                            <div class="spec-item">
+                                <span class="spec-icon">📊</span>
+                                <span>${dataGB} GB</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-icon">⏱️</span>
+                                <span>${product.duration} days</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-icon">🌍</span>
+                                <span>${countryCount} countr${countryCount === 1 ? 'y' : 'ies'}</span>
+                            </div>
+                            <div class="spec-item">
+                                <span class="spec-icon">📶</span>
+                                <span>${maxSpeed}</span>
+                            </div>
+                        </div>
+
+                        <div class="compare-checkbox">
+                            <input type="checkbox" id="compare-${index}" onchange="toggleCompare(${index})">
+                            <label for="compare-${index}">Add to compare</label>
+                        </div>
+
+                        <div class="product-actions">
+                            <button class="btn btn-secondary" onclick="showDetails(${index})">More Info</button>
+                            <button class="btn btn-primary" onclick="buyProduct(${index})">Buy Now</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsGrid.style.display = 'grid';
+        }
+
+        function toggleCompare(index) {
+            // Implement comparison logic here
+            console.log('Toggle compare for product:', index);
+        }
+
+        function showDetails(index) {
+            // Implement details modal here
+            console.log('Show details for product:', index);
+        }
+
+        function buyProduct(index) {
+            // Implement Stripe checkout here
+            console.log('Buy product:', index);
+        }
+    </script>
+</body>
+</html>
