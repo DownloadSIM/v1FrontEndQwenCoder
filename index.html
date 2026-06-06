@@ -670,259 +670,33 @@
   </div>
 
   <script>
-<script>
-    // Configuration - Google Sheets Data Source
-    const SHEET_ID = '1D6zQ91MYfbQL4XSClSWffSTOfmDFJoO4hEdpENB0_RY';
-    const SHEET_NAME = 'LISTING_API_Data';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
-
+    // Configuration - Replace with your actual keys
+    const ESIM_ACCESS_API_KEY = 'YOUR_ESIM_ACCESS_API_KEY'; // Get from https://esimaccess.com/
+    const STRIPE_PUBLISHABLE_KEY = 'YOUR_STRIPE_PUBLISHABLE_KEY'; // Get from Stripe Dashboard
+    
+    // API Endpoints
+    const ESIM_ACCESS_BASE_URL = 'https://api.esimaccess.com/v1';
+    
     // State
     let selectedCountries = [];
-    let allProducts = [];
-    let allCountries = [];
+    let cachedPlans = [];
     let filteredPlans = [];
     let comparedProducts = [];
-
-    // CSV Parsing helper functions
-    function parseCSVLine(line) {
-      const result = [];
-      let inQuote = false;
-      let current = '';
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"') inQuote = !inQuote;
-        else if (ch === ',' && !inQuote) {
-          result.push(current.trim());
-          current = '';
-        } else current += ch;
-      }
-      result.push(current.trim());
-      return result;
-    }
-
-    function stripQuotes(str) { return str ? str.replace(/^"|"$/g, '') : ''; }
-
-    // Load data from Google Sheets
-    async function loadData() {
-      const display = document.getElementById('selectorDisplay');
-      const firstSpan = display ? display.querySelector('span:first-child') : null;
-      if (firstSpan) firstSpan.textContent = 'Loading countries...';
-
-      try {
-        const response = await fetch(CSV_URL);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const csvText = await response.text();
-        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-        if (lines.length < 2) throw new Error('No data rows');
-
-        const headers = parseCSVLine(lines[0]);
-        const priceIdx = headers.findIndex(h => h === 'DSIM Price');
-        const nameIdx = headers.findIndex(h => h === 'API name');
-        const locationIdx = headers.findIndex(h => h === 'API locationName');
-        const volumeIdx = headers.findIndex(h => h === 'CSV GBs_Binary');
-        const durationIdx = headers.findIndex(h => h === 'API duration');
-        const packageCodeIdx = headers.findIndex(h => h === 'API packageCode');
-        const operatorsIdx = headers.findIndex(h => h === 'CSV Operators');
-        const countryCodesIdx = headers.findIndex(h => h === 'CSV Country Codes');
-        const activeTypeIdx = headers.findIndex(h => h === 'API activeType');
-        const ipExportIdx = headers.findIndex(h => h === 'API ipExport');
-        const smsStatusIdx = headers.findIndex(h => h === 'API smsStatus');
-        const topUpIdx = headers.findIndex(h => h === 'API suppotTopUpType');
-
-        if (priceIdx === -1 || nameIdx === -1 || locationIdx === -1)
-          throw new Error('Required columns not found');
-
-        const countrySet = new Set();
-        const products = [];
-
-        for (let i = 1; i < lines.length; i++) {
-          const row = parseCSVLine(lines[i]);
-          if (row.length <= Math.max(priceIdx, nameIdx, locationIdx)) continue;
-          const locationRaw = row[locationIdx] || '';
-          if (!locationRaw.trim()) continue;
-
-          const countries = locationRaw.split(',').map(c => stripQuotes(c.trim())).filter(c => c);
-          if (!countries.length) continue;
-
-          let price = row[priceIdx];
-          if (price && !price.startsWith('$') && !isNaN(parseFloat(price)))
-            price = '$' + parseFloat(price).toFixed(2);
-
-          products.push({
-            name: row[nameIdx] || 'Unnamed',
-            price: price || 'N/A',
-            volume: (volumeIdx !== -1 && row[volumeIdx]) ? row[volumeIdx] : '—',
-            duration: (durationIdx !== -1 && row[durationIdx]) ? row[durationIdx] : '—',
-            packageCode: (packageCodeIdx !== -1 && row[packageCodeIdx]) ? row[packageCodeIdx] : '',
-            countries: countries,
-            operators: (operatorsIdx !== -1) ? row[operatorsIdx] : '',
-            countryCodes: (countryCodesIdx !== -1) ? row[countryCodesIdx] : '',
-            activeType: (activeTypeIdx !== -1) ? row[activeTypeIdx] : '',
-            ipExport: (ipExportIdx !== -1) ? row[ipExportIdx] : '',
-            smsStatus: (smsStatusIdx !== -1) ? row[smsStatusIdx] : '',
-            supportTopUp: (topUpIdx !== -1) ? row[topUpIdx] : ''
-          });
-          countries.forEach(c => countrySet.add(c));
-        }
-
-        allProducts = products;
-        allCountries = Array.from(countrySet).sort();
-
-        // Render country list
-        renderCountryList(allCountries);
-        if (firstSpan) firstSpan.textContent = 'Select countries...';
-
-      } catch (err) {
-        console.error('❌ Failed to load data:', err);
-        if (firstSpan) firstSpan.textContent = 'Failed to load';
-        // Fallback
-        const fallback = [
-          'Japan', 'South Korea', 'USA', 'UK', 'France', 'Germany', 'Italy',
-          'Spain', 'Australia', 'Canada', 'China', 'Thailand', 'Singapore',
-          'Malaysia', 'Indonesia', 'Vietnam', 'Philippines', 'India', 'UAE',
-          'Turkey', 'Brazil', 'Mexico', 'Argentina', 'South Africa', 'Egypt'
-        ];
-        allCountries = fallback;
-        renderCountryList(allCountries);
-      }
-    }
-
-    function renderCountryList(countries) {
-      const list = document.getElementById('countryList');
-      if (!list) return;
-      list.innerHTML = countries.map(c => `
-        <label class="country-item">
-          <input type="checkbox" value="${c}" onchange="updateSelection()"> ${c}
-        </label>
-      `).join('');
-    }
-
+    let allCountries = [];
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      initDropdown();
+      setupEventListeners();
+    });
+    
     function setupEventListeners() {
       document.getElementById('findPlansBtn').addEventListener('click', findPlans);
       document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-
+      
       // Close dropdown when clicking outside
       document.addEventListener('click', e => {
         if (!e.target.closest('.country-selector')) {
-          document.getElementById('selectorDropdown').style.display = 'none';
-        }
-      });
-    }
-
-    // Initialize country dropdown - now handled by loadData()
-    async function initDropdown() {
-      // Countries are already loaded by loadData(), just update the display
-      const display = document.getElementById('selectorDisplay');
-      if (display) {
-        display.querySelector('span:first-child').textContent = 'Select countries...';
-      }
-    }
-
-    // Initialize app on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      setupEventListeners();
-      loadData();
-    });
-
-    function toggleDropdown() {
-      const d = document.getElementById('selectorDropdown');
-      d.style.display = d.style.display === 'block' ? 'none' : 'block';
-      if (d.style.display === 'block') {
-        document.getElementById('countrySearch').focus();
-      }
-    }
-
-    function filterCountries() {
-      const q = document.getElementById('countrySearch').value.toLowerCase();
-      document.querySelectorAll('.country-item').forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(q) ? 'flex' : 'none';
-      });
-    }
-
-    function updateSelection() {
-      selectedCountries = Array.from(document.querySelectorAll('#countryList input:checked')).map(cb => cb.value);
-      const display = document.getElementById('selectorDisplay');
-      const firstSpan = display.querySelector('span:first-child');
-
-      if (selectedCountries.length === 0) {
-        firstSpan.textContent = 'Select countries...';
-      } else if (selectedCountries.length === 1) {
-        firstSpan.textContent = selectedCountries[0];
-      } else {
-        firstSpan.textContent = `${selectedCountries.length} countries selected`;
-      }
-    }
-
-    // Handle plan type checkbox logic (mutually exclusive include/exclude)
-    function handlePlanTypeChange(changedId) {
-      const globalInclude = document.getElementById('globalInclude');
-      const globalExclude = document.getElementById('globalExclude');
-      const regionalInclude = document.getElementById('regionalInclude');
-      const regionalExclude = document.getElementById('regionalExclude');
-
-      // Ensure only one of include/exclude can be checked for each type
-      if (changedId === 'globalInclude' && globalInclude.checked) {
-        globalExclude.checked = false;
-      } else if (changedId === 'globalExclude' && globalExclude.checked) {
-        globalInclude.checked = false;
-      }
-
-      if (changedId === 'regionalInclude' && regionalInclude.checked) {
-        regionalExclude.checked = false;
-      } else if (changedId === 'regionalExclude' && regionalExclude.checked) {
-        regionalInclude.checked = false;
-      }
-    }
-
-    // Find plans from Google Sheets data
-    async function findPlans() {
-      if (selectedCountries.length === 0) {
-        alert('Please select at least one country.');
-        return;
-      }
-
-      // Hide empty state, show results section
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('resultsSection').style.display = 'block';
-      document.getElementById('loadingState').style.display = 'block';
-      document.getElementById('productGrid').innerHTML = '';
-      document.getElementById('errorState').style.display = 'none';
-      document.getElementById('noResultsState').style.display = 'none';
-      document.getElementById('comparisonSection').style.display = 'none';
-
-      try {
-        // Filter products that include ALL selected countries (AND logic)
-        let plans = allProducts.filter(product =>
-          selectedCountries.every(selectedCountry => product.countries.includes(selectedCountry))
-        );
-
-        if (plans.length === 0) {
-          document.getElementById('loadingState').style.display = 'none';
-          document.getElementById('noResultsState').style.display = 'block';
-          filteredPlans = [];
-          return;
-        }
-
-        filteredPlans = plans;
-
-        // Apply initial sorting
-        sortPlans(filteredPlans);
-
-        // Render products
-        document.getElementById('loadingState').style.display = 'none';
-        renderProductGrid(filteredPlans);
-
-      } catch (e) {
-        console.error('❌ Search failed:', e);
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('errorState').innerHTML = `
-          <p>⚠️ Search failed: ${e.message}</p>
-        `;
-        document.getElementById('errorState').style.display = 'block';
-      }
-    }
-
           document.getElementById('selectorDropdown').style.display = 'none';
         }
       });
