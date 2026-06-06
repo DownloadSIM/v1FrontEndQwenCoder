@@ -307,6 +307,8 @@ const retailPrice = (basePrice * PROFIT_MULTIPLIER) + PROFIT_FIXED;
 - **eSIMaccess GitHub**: https://github.com/esimaccess/esimaccess-api
 - **Stripe Documentation**: https://docs.stripe.com
 - **Stripe AI Skills**: https://github.com/stripe/ai/tree/main/skills
+- **ActivePieces Documentation**: https://www.activepieces.com/docs/overview/welcome
+- **ActivePieces AI Skills**: https://github.com/activepieces/activepieces/tree/main/.agents/skills
 
 ## License
 
