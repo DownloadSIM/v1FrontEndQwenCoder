@@ -48,9 +48,14 @@ A production-ready eSIM resale website that integrates with eSIMaccess.com API f
 2. **Stripe Account**
    - Sign up at https://stripe.com/
    - Get your API keys from the Dashboard
-   - Review Stripe documentation: https://docs.stripe.com
+   - Review Stripe documentation: https://docs.stripe.com/
 
-3. **Web Server** (for production)
+3. **ActivePieces.com Account**
+   - Sign up at https://activepieces.com/
+   - Get your API keys from the Dashboard
+   - Review ActivePieces documentation: https://www.activepieces.com/docs/
+
+4. **Web Server** (for production)
    - Node.js, Python, PHP, or any backend capable of making API calls
    - HTTPS enabled for secure payment processing
 
