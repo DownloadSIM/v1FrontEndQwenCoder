@@ -672,8 +672,11 @@
   <script>
     // Configuration - Google Sheets Data Source
     const SHEET_ID = '1D6zQ91MYfbQL4XSClSWffSTOfmDFJoO4hEdpENB0_RY';
-    const SHEET_NAME = 'LISTING_API_Data';
-    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
+    const COUNTRIES_SHEET = 'AppsScript_Countries';
+    const PRODUCTS_SHEET = 'FRONTEND_Products';
+    
+    const COUNTRIES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${COUNTRIES_SHEET}`;
+    const PRODUCTS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${PRODUCTS_SHEET}`;
 
     // State
     let selectedCountries = [];
@@ -708,34 +711,58 @@
       if (firstSpan) firstSpan.textContent = 'Loading countries...';
 
       try {
-        const response = await fetch(CSV_URL);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const csvText = await response.text();
-        const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
-        if (lines.length < 2) throw new Error('No data rows');
-
-        const headers = parseCSVLine(lines[0]);
-        const priceIdx = headers.findIndex(h => h === 'DSIM Price');
-        const nameIdx = headers.findIndex(h => h === 'API name');
-        const locationIdx = headers.findIndex(h => h === 'API locationName');
-        const volumeIdx = headers.findIndex(h => h === 'CSV GBs_Binary');
-        const durationIdx = headers.findIndex(h => h === 'API duration');
-        const packageCodeIdx = headers.findIndex(h => h === 'API packageCode');
-        const operatorsIdx = headers.findIndex(h => h === 'CSV Operators');
-        const countryCodesIdx = headers.findIndex(h => h === 'CSV Country Codes');
-        const activeTypeIdx = headers.findIndex(h => h === 'API activeType');
-        const ipExportIdx = headers.findIndex(h => h === 'API ipExport');
-        const smsStatusIdx = headers.findIndex(h => h === 'API smsStatus');
-        const topUpIdx = headers.findIndex(h => h === 'API suppotTopUpType');
+        // Fetch countries list
+        const countriesResponse = await fetch(COUNTRIES_URL);
+        if (!countriesResponse.ok) throw new Error(`HTTP ${countriesResponse.status} for countries`);
+        const countriesText = await countriesResponse.text();
+        const countriesLines = countriesText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        
+        if (countriesLines.length < 2) throw new Error('No country data rows');
+        
+        const countriesHeaders = parseCSVLine(countriesLines[0]);
+        const countryNameIdx = countriesHeaders.findIndex(h => h.toLowerCase().includes('name') || h.toLowerCase().includes('country'));
+        
+        if (countryNameIdx === -1) throw new Error('Country name column not found');
+        
+        const countrySet = new Set();
+        for (let i = 1; i < countriesLines.length; i++) {
+          const row = parseCSVLine(countriesLines[i]);
+          if (row.length <= countryNameIdx) continue;
+          const countryName = stripQuotes(row[countryNameIdx]).trim();
+          if (countryName) countrySet.add(countryName);
+        }
+        
+        allCountries = Array.from(countrySet).sort();
+        
+        // Fetch products list
+        const productsResponse = await fetch(PRODUCTS_URL);
+        if (!productsResponse.ok) throw new Error(`HTTP ${productsResponse.status} for products`);
+        const productsText = await productsResponse.text();
+        const productsLines = productsText.split(/\r?\n/).filter(l => l.trim().length > 0);
+        
+        if (productsLines.length < 2) throw new Error('No product data rows');
+        
+        const productsHeaders = parseCSVLine(productsLines[0]);
+        const priceIdx = productsHeaders.findIndex(h => h === 'DSIM Price');
+        const nameIdx = productsHeaders.findIndex(h => h === 'API name');
+        const locationIdx = productsHeaders.findIndex(h => h === 'API locationName');
+        const volumeIdx = productsHeaders.findIndex(h => h === 'CSV GBs_Binary');
+        const durationIdx = productsHeaders.findIndex(h => h === 'API duration');
+        const packageCodeIdx = productsHeaders.findIndex(h => h === 'API packageCode');
+        const operatorsIdx = productsHeaders.findIndex(h => h === 'CSV Operators');
+        const countryCodesIdx = productsHeaders.findIndex(h => h === 'CSV Country Codes');
+        const activeTypeIdx = productsHeaders.findIndex(h => h === 'API activeType');
+        const ipExportIdx = productsHeaders.findIndex(h => h === 'API ipExport');
+        const smsStatusIdx = productsHeaders.findIndex(h => h === 'API smsStatus');
+        const topUpIdx = productsHeaders.findIndex(h => h === 'API suppotTopUpType');
 
         if (priceIdx === -1 || nameIdx === -1 || locationIdx === -1)
-          throw new Error('Required columns not found');
+          throw new Error('Required columns not found in products');
 
-        const countrySet = new Set();
         const products = [];
 
-        for (let i = 1; i < lines.length; i++) {
-          const row = parseCSVLine(lines[i]);
+        for (let i = 1; i < productsLines.length; i++) {
+          const row = parseCSVLine(productsLines[i]);
           if (row.length <= Math.max(priceIdx, nameIdx, locationIdx)) continue;
           const locationRaw = row[locationIdx] || '';
           if (!locationRaw.trim()) continue;
@@ -761,11 +788,9 @@
             smsStatus: (smsStatusIdx !== -1) ? row[smsStatusIdx] : '',
             supportTopUp: (topUpIdx !== -1) ? row[topUpIdx] : ''
           });
-          countries.forEach(c => countrySet.add(c));
         }
 
         allProducts = products;
-        allCountries = Array.from(countrySet).sort();
 
         // Render country list
         renderCountryList(allCountries);
@@ -922,109 +947,6 @@
       }
     }
 
-          document.getElementById('selectorDropdown').style.display = 'none';
-        }
-      });
-    }
-    
-    // Initialize country dropdown
-    async function initDropdown() {
-      const list = document.getElementById('countryList');
-      list.innerHTML = '<div style="padding:12px; color:#64748b;">Loading countries...</div>';
-      
-      try {
-        // Fetch countries from eSIMaccess API
-        const response = await fetch(`${ESIM_ACCESS_BASE_URL}/locations`, {
-          headers: {
-            'Authorization': `Bearer ${ESIM_ACCESS_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Extract unique country names from locationNetworkList
-        const countrySet = new Set();
-        
-        if (data.products) {
-          data.products.forEach(product => {
-            if (product.locationNetworkList) {
-              product.locationNetworkList.forEach(loc => {
-                if (loc.locationName) {
-                  countrySet.add(loc.locationName);
-                }
-              });
-            }
-          });
-        }
-        
-        allCountries = Array.from(countrySet).sort();
-        
-        if (allCountries.length === 0) {
-          throw new Error('No countries found');
-        }
-        
-        renderCountryList(allCountries);
-      } catch (e) {
-        console.error('❌ Country fetch failed:', e);
-        // Fallback list
-        const fallback = [
-          'Japan', 'South Korea', 'USA', 'UK', 'France', 'Germany', 'Italy', 
-          'Spain', 'Australia', 'Canada', 'China', 'Thailand', 'Singapore',
-          'Malaysia', 'Indonesia', 'Vietnam', 'Philippines', 'India', 'UAE',
-          'Turkey', 'Brazil', 'Mexico', 'Argentina', 'South Africa', 'Egypt'
-        ];
-        allCountries = fallback;
-        renderCountryList(allCountries);
-      }
-    }
-    
-    function renderCountryList(countries) {
-      const list = document.getElementById('countryList');
-      list.innerHTML = countries.map(c => `
-        <label class="country-item">
-          <input type="checkbox" value="${c}" onchange="updateSelection()"> ${c}
-        </label>
-      `).join('');
-      
-      const display = document.getElementById('selectorDisplay');
-      display.querySelector('span:first-child').textContent = 'Select countries...';
-    }
-    
-    function toggleDropdown() {
-      const d = document.getElementById('selectorDropdown');
-      d.style.display = d.style.display === 'block' ? 'none' : 'block';
-      if (d.style.display === 'block') {
-        document.getElementById('countrySearch').focus();
-      }
-    }
-    
-    function filterCountries() {
-      const q = document.getElementById('countrySearch').value.toLowerCase();
-      document.querySelectorAll('.country-item').forEach(item => {
-        const text = item.textContent.toLowerCase();
-        item.style.display = text.includes(q) ? 'flex' : 'none';
-      });
-    }
-    
-    function updateSelection() {
-      selectedCountries = Array.from(document.querySelectorAll('#countryList input:checked')).map(cb => cb.value);
-      const display = document.getElementById('selectorDisplay');
-      const firstSpan = display.querySelector('span:first-child');
-      
-      if (selectedCountries.length === 0) {
-        firstSpan.textContent = 'Select countries...';
-      } else if (selectedCountries.length === 1) {
-        firstSpan.textContent = selectedCountries[0];
-      } else {
-        firstSpan.textContent = `${selectedCountries.length} countries selected`;
-      }
-    }
-    
     // Handle plan type checkbox logic (mutually exclusive include/exclude)
     function handlePlanTypeChange(changedId) {
       const globalInclude = document.getElementById('globalInclude');
@@ -1046,112 +968,33 @@
       }
     }
     
-    // Find plans from eSIMaccess API
-    async function findPlans() {
-      if (selectedCountries.length === 0) {
-        alert('Please select at least one country.');
-        return;
-      }
-      
-      // Hide empty state, show results section
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('resultsSection').style.display = 'block';
-      document.getElementById('loadingState').style.display = 'block';
-      document.getElementById('productGrid').innerHTML = '';
-      document.getElementById('errorState').style.display = 'none';
-      document.getElementById('noResultsState').style.display = 'none';
-      document.getElementById('comparisonSection').style.display = 'none';
-      
-      try {
-        // Search for plans matching selected countries
-        const response = await fetch(`${ESIM_ACCESS_BASE_URL}/products/search`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${ESIM_ACCESS_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            locations: selectedCountries,
-            includeDetails: true
-          })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('✅ Received plans:', data);
-        
-        let plans = [];
-        
-        // Handle different response structures
-        if (Array.isArray(data)) {
-          plans = data;
-        } else if (data.products && Array.isArray(data.products)) {
-          plans = data.products;
-        } else if (data.results && Array.isArray(data.results)) {
-          plans = data.results;
-        } else if (data.data && Array.isArray(data.data)) {
-          plans = data.data;
-        }
-        
-        if (plans.length === 0) {
-          document.getElementById('loadingState').style.display = 'none';
-          document.getElementById('noResultsState').style.display = 'block';
-          cachedPlans = [];
-          filteredPlans = [];
-          return;
-        }
-        
-        cachedPlans = plans;
-        filteredPlans = plans;
-        
-        // Apply initial sorting
-        sortPlans(filteredPlans);
-        
-        // Render products
-        document.getElementById('loadingState').style.display = 'none';
-        renderProductGrid(filteredPlans);
-        
-      } catch (e) {
-        console.error('❌ Search failed:', e);
-        document.getElementById('loadingState').style.display = 'none';
-        document.getElementById('errorState').innerHTML = `
-          <p>⚠️ Search failed: ${e.message}</p>
-          <p style="margin-top: 8px; font-size: 0.9rem;">Please check your API key and try again.</p>
-        `;
-        document.getElementById('errorState').style.display = 'block';
-      }
-    }
-    
     // Sort plans according to requirements
     function sortPlans(plans) {
       plans.sort((a, b) => {
-        // 1. Global plans first
-        const aIsGlobal = a.slug && a.slug.startsWith('GL-');
-        const bIsGlobal = b.slug && b.slug.startsWith('GL-');
+        // 1. Global plans first (check if countries array contains "Global" or similar)
+        const aIsGlobal = a.countries && a.countries.some(c => c.toLowerCase().includes('global') || c === 'Worldwide');
+        const bIsGlobal = b.countries && b.countries.some(c => c.toLowerCase().includes('global') || c === 'Worldwide');
         
         if (aIsGlobal && !bIsGlobal) return -1;
         if (!aIsGlobal && bIsGlobal) return 1;
         
         // 2. Number of countries (ascending)
-        const aCountryCount = a.locationNetworkList ? a.locationNetworkList.length : 0;
-        const bCountryCount = b.locationNetworkList ? b.locationNetworkList.length : 0;
+        const aCountryCount = a.countries ? a.countries.length : 0;
+        const bCountryCount = b.countries ? b.countries.length : 0;
         
         if (aCountryCount !== bCountryCount) {
           return aCountryCount - bCountryCount;
         }
         
-        // 3. First three letters of slug (ascending)
-        const aSlugPrefix = (a.slug || '').substring(0, 3).toLowerCase();
-        const bSlugPrefix = (b.slug || '').substring(0, 3).toLowerCase();
+        // 3. First three letters of name (ascending) - using name instead of slug
+        const aNamePrefix = (a.name || '').substring(0, 3).toLowerCase();
+        const bNamePrefix = (b.name || '').substring(0, 3).toLowerCase();
         
-        if (aSlugPrefix !== bSlugPrefix) {
-          return aSlugPrefix.localeCompare(bSlugPrefix);
+        if (aNamePrefix !== bNamePrefix) {
+          return aNamePrefix.localeCompare(bNamePrefix);
         }
         
-        // 4. Duration (ascending)
+        // 4. Duration (ascending) - parse duration string like "7 days"
         const aDuration = parseInt(a.duration) || 0;
         const bDuration = parseInt(b.duration) || 0;
         
@@ -1160,16 +1003,16 @@
         }
         
         // 5. Data allowance in GB (ascending)
-        const aDataGB = parseDataToGB(a.trafficAllowance || a.data || a.volume);
-        const bDataGB = parseDataToGB(b.trafficAllowance || b.data || b.volume);
+        const aDataGB = parseDataToGB(a.volume);
+        const bDataGB = parseDataToGB(b.volume);
         
         if (aDataGB !== bDataGB) {
           return aDataGB - bDataGB;
         }
         
-        // 6. Price (ascending)
-        const aPrice = parseFloat(a.price) || 0;
-        const bPrice = parseFloat(b.price) || 0;
+        // 6. Price (ascending) - parse price string like "$10.00"
+        const aPrice = parseFloat(a.price.replace('$', '')) || 0;
+        const bPrice = parseFloat(b.price.replace('$', '')) || 0;
         
         return aPrice - bPrice;
       });
@@ -1198,8 +1041,8 @@
     
     // Determine plan type
     function getPlanType(plan) {
-      const countryCount = plan.locationNetworkList ? plan.locationNetworkList.length : 0;
-      const isGlobal = plan.slug && plan.slug.startsWith('GL-');
+      const countryCount = plan.countries ? plan.countries.length : 0;
+      const isGlobal = plan.countries && plan.countries.some(c => c.toLowerCase().includes('global') || c === 'Worldwide');
       
       if (isGlobal || countryCount > 10) return 'global';
       if (countryCount > 1) return 'regional';
@@ -1208,7 +1051,7 @@
     
     // Apply filters
     function applyFilters() {
-      if (cachedPlans.length === 0) return;
+      if (allProducts.length === 0) return;
       
       const minData = parseFloat(document.getElementById('minData').value) || 0;
       const maxData = parseFloat(document.getElementById('maxData').value) || Infinity;
@@ -1220,9 +1063,9 @@
       const regionalInclude = document.getElementById('regionalInclude').checked;
       const regionalExclude = document.getElementById('regionalExclude').checked;
       
-      filteredPlans = cachedPlans.filter(plan => {
+      filteredPlans = allProducts.filter(plan => {
         // Data filter
-        const planDataGB = parseDataToGB(plan.trafficAllowance || plan.data || plan.volume);
+        const planDataGB = parseDataToGB(plan.volume);
         if (planDataGB < minData || planDataGB > maxData) return false;
         
         // Duration filter
@@ -1265,21 +1108,21 @@
                               planType === 'regional' ? '<span class="badge badge-regional">Regional</span>' :
                               '<span class="badge badge-local">Local</span>';
         
-        const dataGB = parseDataToGB(plan.trafficAllowance || plan.data || plan.volume);
+        const dataGB = parseDataToGB(plan.volume);
         const dataDisplay = dataGB === Infinity ? 'Unlimited' : `${dataGB.toFixed(1)} GB`;
-        const speed = plan.speed || plan.maxNetworkType || '4G/5G';
-        const duration = plan.duration || plan.validity || 'N/A';
-        const price = parseFloat(plan.price) || 0;
+        const speed = '4G/5G';
+        const duration = plan.duration || 'N/A';
+        const price = parseFloat(plan.price.replace('$', '')) || 0;
         const pricePerGB = dataGB === Infinity || dataGB === 0 ? 'N/A' : `$${(price / dataGB).toFixed(2)}`;
-        const countryCount = plan.locationNetworkList ? plan.locationNetworkList.length : 0;
+        const countryCount = plan.countries ? plan.countries.length : 0;
         
-        const isCompared = comparedProducts.some(p => p.slug === plan.slug || p.packageCode === plan.packageCode);
+        const isCompared = comparedProducts.some(p => p.packageCode === plan.packageCode);
         
         return `
-          <div class="product-card" data-slug="${plan.slug || ''}" data-package="${plan.packageCode || ''}">
+          <div class="product-card" data-package="${plan.packageCode || ''}">
             <div class="product-header">
-              <div class="product-name">${plan.name || plan.productName || 'Unknown Plan'} ${planTypeBadge}</div>
-              <div class="product-price">$${price.toFixed(2)}</div>
+              <div class="product-name">${plan.name || 'Unknown Plan'} ${planTypeBadge}</div>
+              <div class="product-price">${plan.price}</div>
             </div>
             
             <div class="product-body">
@@ -1294,7 +1137,7 @@
                 </div>
                 <div class="spec-item">
                   <span class="spec-label">Duration</span>
-                  <span class="spec-value">${duration} Days</span>
+                  <span class="spec-value">${duration}</span>
                 </div>
                 <div class="spec-item">
                   <span class="spec-label">Price/GB</span>
@@ -1309,14 +1152,14 @@
             
             <div class="compare-checkbox">
               <label>
-                <input type="checkbox" onchange="toggleCompare('${plan.slug || plan.packageCode}', ${index})" ${isCompared ? 'checked' : ''}>
+                <input type="checkbox" onchange="toggleCompare('${plan.packageCode || ''}', ${index})" ${isCompared ? 'checked' : ''}>
                 Add to Compare
               </label>
             </div>
             
             <div class="product-actions">
               <button class="secondary" onclick="toggleMoreInfo(this)">ℹ️ More Info</button>
-              <button class="success" onclick="initiateCheckout('${plan.slug || plan.packageCode}')">💳 Buy Now</button>
+              <button class="success" onclick="initiateCheckout('${plan.packageCode || ''}')">💳 Buy Now</button>
             </div>
             
             <div class="more-info-section">
@@ -1326,20 +1169,20 @@
                   <span class="spec-value">${plan.packageCode || 'N/A'}</span>
                 </div>
                 <div class="spec-item">
-                  <span class="spec-label">FUP Policy</span>
-                  <span class="spec-value">${plan.fupPolicy || 'N/A'}</span>
+                  <span class="spec-label">Countries</span>
+                  <span class="spec-value">${plan.countries ? plan.countries.join(', ') : 'N/A'}</span>
                 </div>
                 <div class="spec-item">
-                  <span class="spec-label">IP Export</span>
-                  <span class="spec-value">${plan.ipExport ? 'Yes' : 'No'}</span>
+                  <span class="spec-label">Operators</span>
+                  <span class="spec-value">${plan.operators || 'N/A'}</span>
                 </div>
                 <div class="spec-item">
                   <span class="spec-label">Active Type</span>
                   <span class="spec-value">${plan.activeType || 'N/A'}</span>
                 </div>
                 <div class="spec-item">
-                  <span class="spec-label">Data Type</span>
-                  <span class="spec-value">${plan.dataType || 'N/A'}</span>
+                  <span class="spec-label">IP Export</span>
+                  <span class="spec-value">${plan.ipExport || 'N/A'}</span>
                 </div>
                 <div class="spec-item">
                   <span class="spec-label">SMS Status</span>
@@ -1347,11 +1190,7 @@
                 </div>
                 <div class="spec-item">
                   <span class="spec-label">Top-Up Support</span>
-                  <span class="spec-value">${plan.supportTopUpType || 'N/A'}</span>
-                </div>
-                <div class="spec-item">
-                  <span class="spec-label">Unused Valid Time</span>
-                  <span class="spec-value">${plan.unusedValidTime || 'N/A'}</span>
+                  <span class="spec-value">${plan.supportTopUp || 'N/A'}</span>
                 </div>
               </div>
               
@@ -1437,7 +1276,7 @@
     function toggleCompare(identifier, index) {
       const plan = filteredPlans[index];
       const existingIndex = comparedProducts.findIndex(p => 
-        p.slug === plan.slug || p.packageCode === plan.packageCode
+        p.packageCode === plan.packageCode
       );
       
       if (existingIndex >= 0) {
@@ -1486,33 +1325,32 @@
       let html = '<table class="comparison-table"><thead><tr><th>Feature</th>';
       
       comparedProducts.forEach(plan => {
-        html += `<th>${plan.name || plan.productName || 'Unknown'}</th>`;
+        html += `<th>${plan.name || 'Unknown'}</th>`;
       });
       
       html += '</tr></thead><tbody>';
       
       // Rows for comparison
       const rows = [
-        { label: 'Price', getValue: p => `$${parseFloat(p.price || 0).toFixed(2)}` },
+        { label: 'Price', getValue: p => p.price },
         { label: 'Data Allowance', getValue: p => {
-          const gb = parseDataToGB(p.trafficAllowance || p.data || p.volume);
+          const gb = parseDataToGB(p.volume);
           return gb === Infinity ? 'Unlimited' : `${gb.toFixed(1)} GB`;
         }},
-        { label: 'Duration', getValue: p => `${p.duration || p.validity || 'N/A'} Days` },
-        { label: 'Speed', getValue: p => p.speed || p.maxNetworkType || 'N/A' },
+        { label: 'Duration', getValue: p => p.duration || 'N/A' },
+        { label: 'Speed', getValue: p => '4G/5G' },
         { label: 'Price/GB', getValue: p => {
-          const gb = parseDataToGB(p.trafficAllowance || p.data || p.volume);
+          const gb = parseDataToGB(p.volume);
           if (gb === Infinity || gb === 0) return 'N/A';
-          return `$${(parseFloat(p.price || 0) / gb).toFixed(2)}`;
+          const priceNum = parseFloat(p.price.replace('$', '')) || 0;
+          return `$${(priceNum / gb).toFixed(2)}`;
         }},
-        { label: 'Countries Covered', getValue: p => p.locationNetworkList ? p.locationNetworkList.length : 0 },
+        { label: 'Countries Covered', getValue: p => p.countries ? p.countries.length : 0 },
         { label: 'Package Code', getValue: p => p.packageCode || 'N/A' },
-        { label: 'FUP Policy', getValue: p => p.fupPolicy || 'N/A' },
-        { label: 'IP Export', getValue: p => p.ipExport ? 'Yes' : 'No' },
+        { label: 'IP Export', getValue: p => p.ipExport || 'N/A' },
         { label: 'Active Type', getValue: p => p.activeType || 'N/A' },
-        { label: 'Data Type', getValue: p => p.dataType || 'N/A' },
         { label: 'SMS Status', getValue: p => p.smsStatus || 'N/A' },
-        { label: 'Top-Up Support', getValue: p => p.supportTopUpType || 'N/A' },
+        { label: 'Top-Up Support', getValue: p => p.supportTopUp || 'N/A' },
         { label: 'Plan Type', getValue: p => {
           const type = getPlanType(p);
           return type.charAt(0).toUpperCase() + type.slice(1);
@@ -1534,8 +1372,8 @@
     // Initiate checkout with Stripe
     async function initiateCheckout(planIdentifier) {
       // Find the plan
-      const plan = cachedPlans.find(p => 
-        p.slug === planIdentifier || p.packageCode === planIdentifier
+      const plan = allProducts.find(p => 
+        p.packageCode === planIdentifier
       );
       
       if (!plan) {
@@ -1547,17 +1385,18 @@
       // For now, we'll show an alert with plan details
       
       const planType = getPlanType(plan);
-      const dataGB = parseDataToGB(plan.trafficAllowance || plan.data || plan.volume);
+      const dataGB = parseDataToGB(plan.volume);
       const dataDisplay = dataGB === Infinity ? 'Unlimited' : `${dataGB.toFixed(1)} GB`;
       
       alert(`
         🛒 Checkout Initiated
         
-        Plan: ${plan.name || plan.productName}
+        Plan: ${plan.name}
         Type: ${planType.charAt(0).toUpperCase() + planType.slice(1)}
         Data: ${dataDisplay}
-        Duration: ${plan.duration || plan.validity} Days
-        Price: $${parseFloat(plan.price || 0).toFixed(2)}
+        Duration: ${plan.duration}
+        Price: ${plan.price}
+        Countries: ${plan.countries.join(', ')}
         
         ⚠️ Stripe integration requires backend server.
         See README.md for setup instructions.
