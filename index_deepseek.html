@@ -17,7 +17,7 @@
         h1 { font-size: 1.8rem; margin-bottom: 0.25rem; color: #0f3b5c; }
         .subtitle { color: #4a627a; margin-bottom: 2rem; border-left: 4px solid #2c7da0; padding-left: 1rem; }
 
-        /* Country selector (same as before, keep original) */
+        /* Country selector */
         .selector-card {
             background: white;
             border-radius: 20px;
@@ -84,6 +84,7 @@
         }
         .show-plans-btn:hover, .open-dropdown-btn:hover { opacity: 0.9; }
 
+        /* Dropdown */
         .dropdown-overlay {
             display: none;
             position: fixed;
@@ -105,348 +106,657 @@
             flex-direction: column;
             overflow: hidden;
         }
-        /* ... keep all existing styles for dropdown, product grid, etc. ... */
-        /* For brevity, I'm omitting the full CSS here. Use the CSS from the previous complete HTML file. */
-        /* But to save space, I'll include only the new modal styles and assume you have the rest. */
+        .dropdown-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #eef2f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-header h3 { margin: 0; font-size: 1.2rem; }
+        .close-dropdown {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #5c6f87;
+        }
+        .dropdown-search {
+            padding: 12px 20px;
+            border-bottom: 1px solid #eef2f5;
+        }
+        .dropdown-search input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 40px;
+            font-size: 0.9rem;
+        }
+        .checkbox-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 20px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 12px;
+        }
+        .checkbox-item:hover { background: #f0f4f9; }
+        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; }
+        .checkbox-item label { flex: 1; cursor: pointer; font-size: 0.9rem; }
+        .dropdown-actions {
+            padding: 12px 20px;
+            border-top: 1px solid #eef2f5;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        .dropdown-actions button {
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .dropdown-actions .apply-btn {
+            background: #2c7da0;
+            color: white;
+        }
+        .dropdown-actions .cancel-btn {
+            background: #eef2f5;
+        }
+
+        /* Compare and stats */
+        .compare-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+        .stats {
+            background: #eef2f5;
+            border-radius: 16px;
+            padding: 0.75rem 1.5rem;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+        .compare-btn {
+            background: #2c7da0;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .compare-btn:disabled {
+            background: #b0c4d8;
+            cursor: not-allowed;
+        }
+
+        /* Product grid */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.5rem;
+        }
+        .product-card {
+            background: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid #e9edf2;
+            transition: box-shadow 0.2s;
+            position: relative;
+        }
+        .product-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .product-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f3b5c; }
+        .product-details { margin: 1rem 0; display: flex; flex-wrap: wrap; gap: 0.8rem; font-size: 0.9rem; }
+        .detail-item { background: #f1f5f9; padding: 0.25rem 0.75rem; border-radius: 30px; }
+        .price { font-size: 1.6rem; font-weight: 800; color: #2c7da0; margin: 0.75rem 0 0.25rem; }
+        .package-code { font-family: monospace; font-size: 0.75rem; color: #5f6c80; background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 8px; display: inline-block; }
         
-        /* New modal styles for product info, email, OTP */
-        .checkout-modal {
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 1rem;
+            align-items: center;
+        }
+        .compare-checkbox {
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+        .btn-buy, .btn-more-details {
+            background: none;
+            border: 1px solid #2c7da0;
+            color: #2c7da0;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-buy {
+            background: #2c7da0;
+            color: white;
+        }
+        .btn-buy:hover {
+            background: #1f5e7a;
+        }
+        .btn-more-details:hover {
+            background: #eef2f5;
+        }
+        
+        .more-details-content {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed #e9edf2;
+            font-size: 0.85rem;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .more-details-content.show { display: block; }
+        .more-details-content p {
+            word-break: break-word;
+            white-space: normal;
+            overflow-wrap: break-word;
+            margin: 0.5rem 0;
+        }
+        
+        /* Compare modal */
+        .compare-modal {
             display: none;
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 3000;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
             align-items: center;
             justify-content: center;
         }
-        .checkout-modal-content {
+        .compare-modal-content {
             background: white;
             width: 90%;
-            max-width: 450px;
-            border-radius: 24px;
+            max-width: 1200px;
+            max-height: 85vh;
+            border-radius: 28px;
+            overflow-y: auto;
             padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
         }
-        .checkout-modal-header {
-            border-bottom: 1px solid #e2e8f0;
+        .compare-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 1rem;
             padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eef2f5;
         }
-        .checkout-modal-body {
-            margin: 1rem 0;
-        }
-        .checkout-modal-body input {
-            width: 100%;
-            padding: 12px;
-            font-size: 1rem;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-        }
-        .checkout-modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 1rem;
-        }
-        .checkout-modal-actions button {
-            padding: 8px 20px;
-            border-radius: 8px;
+        .close-compare {
+            background: none;
             border: none;
+            font-size: 1.8rem;
             cursor: pointer;
-            font-weight: 500;
         }
-        .btn-primary {
-            background: #2c7da0;
-            color: white;
+        .compare-table {
+            width: 100%;
+            border-collapse: collapse;
         }
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #475569;
+        .compare-table th, .compare-table td {
+            border: 1px solid #e2e8f0;
+            padding: 10px;
+            vertical-align: top;
+            text-align: left;
         }
-        .error-message {
-            color: #e53e3e;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
+        .compare-table th {
+            background: #f0f4f9;
+            width: 150px;
         }
-        .success-message {
-            color: #2f855a;
-            font-size: 0.8rem;
-            margin-top: 0.5rem;
-        }
-        .product-info-line {
-            margin: 0.5rem 0;
+        .no-results { text-align: center; padding: 3rem; background: white; border-radius: 24px; color: #5f6c80; }
+        footer { margin-top: 3rem; text-align: center; font-size: 0.8rem; color: #7e8c9e; }
+        @media (max-width: 700px) {
+            .action-bar { flex-direction: column; align-items: stretch; }
+            button { width: 100%; }
+            .compare-bar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
 <body>
-    <!-- Your existing HTML for country selector, product grid, etc. goes here -->
-    <!-- I'll provide a minimal version; you should merge with your existing body content -->
-    <div class="container">
-        <h1>🌏 eSIM Product Finder</h1>
-        <div class="subtitle">Select one or more countries – then click “Show plans”</div>
-        <div class="selector-card">
-            <div id="selectedChips" class="selected-chips"></div>
-            <div class="action-bar">
-                <button id="openDropdownBtn" class="open-dropdown-btn">✈️ Select Countries</button>
-                <button id="showPlansBtn" class="show-plans-btn">🔍 Show plans</button>
-            </div>
+<div class="container">
+    <h1>🌏 eSIM Product Finder</h1>
+    <div class="subtitle">Select one or more countries – then click “Show plans”</div>
+
+    <div class="selector-card">
+        <div id="selectedChips" class="selected-chips"></div>
+        <div class="action-bar">
+            <button id="openDropdownBtn" class="open-dropdown-btn">✈️ Select Countries</button>
+            <button id="showPlansBtn" class="show-plans-btn">🔍 Show plans</button>
         </div>
-        <div class="compare-bar">
-            <div class="stats" id="statsPlaceholder">Loading product catalog...</div>
-            <button id="compareBtn" class="compare-btn" disabled>Compare Selected (0)</button>
-        </div>
-        <div id="productList" class="product-grid"></div>
-        <footer>DownloadSIM™ | Since 2025</footer>
     </div>
 
-    <!-- Modals for checkout flow -->
-    <!-- Modal 1: Product Info -->
-    <div id="productInfoModal" class="checkout-modal">
-        <div class="checkout-modal-content">
-            <div class="checkout-modal-header">
-                <h3>Confirm Your eSIM Plan</h3>
+    <div id="dropdownOverlay" class="dropdown-overlay">
+        <div class="dropdown-panel">
+            <div class="dropdown-header">
+                <h3>Choose countries</h3>
+                <button id="closeDropdownBtn" class="close-dropdown">&times;</button>
             </div>
-            <div class="checkout-modal-body" id="productInfoBody">
-                <!-- dynamic product details -->
+            <div class="dropdown-search">
+                <input type="text" id="countryFilterInput" placeholder="Search countries..." autocomplete="off">
             </div>
-            <div class="checkout-modal-actions">
-                <button id="cancelProductBtn" class="btn-secondary">Cancel</button>
-                <button id="proceedToEmailBtn" class="btn-primary">Buy</button>
+            <div id="checkboxContainer" class="checkbox-container"></div>
+            <div class="dropdown-actions">
+                <button id="cancelDropdownBtn" class="cancel-btn">Cancel</button>
+                <button id="applyCountriesBtn" class="apply-btn">Apply</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal 2: Email Entry -->
-    <div id="emailModal" class="checkout-modal">
-        <div class="checkout-modal-content">
-            <div class="checkout-modal-header">
-                <h3>Enter Your Email</h3>
-            </div>
-            <div class="checkout-modal-body">
-                <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="off">
-                <div id="emailError" class="error-message" style="display:none;"></div>
-                <div id="emailSuccess" class="success-message" style="display:none;"></div>
-            </div>
-            <div class="checkout-modal-actions">
-                <button id="cancelEmailBtn" class="btn-secondary">Cancel</button>
-                <button id="sendOtpBtn" class="btn-primary">Send OTP</button>
-            </div>
-        </div>
+    <div class="compare-bar">
+        <div class="stats" id="statsPlaceholder">Loading product catalog...</div>
+        <button id="compareBtn" class="compare-btn" disabled>Compare Selected (0)</button>
     </div>
 
-    <!-- Modal 3: OTP Entry -->
-    <div id="otpModal" class="checkout-modal">
-        <div class="checkout-modal-content">
-            <div class="checkout-modal-header">
-                <h3>Verify One-Time Password</h3>
-            </div>
-            <div class="checkout-modal-body">
-                <input type="text" id="otpInput" placeholder="Enter 6-digit code" maxlength="6" autocomplete="off">
-                <div id="otpError" class="error-message" style="display:none;"></div>
-                <div id="otpSuccess" class="success-message" style="display:none;"></div>
-            </div>
-            <div class="checkout-modal-actions">
-                <button id="cancelOtpBtn" class="btn-secondary">Cancel</button>
-                <button id="verifyOtpBtn" class="btn-primary">Next</button>
-                <button id="finalOkBtn" class="btn-primary" style="display:none;">OK</button>
-            </div>
+    <div id="productList" class="product-grid"></div>
+    <footer>DownloadSIM™ | Since 2025</footer>
+</div>
+
+<!-- Compare Modal -->
+<div id="compareModal" class="compare-modal">
+    <div class="compare-modal-content">
+        <div class="compare-modal-header">
+            <h2>Compare eSIM Plans</h2>
+            <button id="closeCompareBtn" class="close-compare">&times;</button>
         </div>
+        <div id="compareTableContainer"></div>
     </div>
+</div>
 
-    <script>
-        // ========== Load product catalog and render product cards (same as before) ==========
-        // For brevity, I'm including only the checkout flow JS.
-        // You must merge this with your existing product loading logic.
-        // I'll provide a complete merged version later if needed.
-        
-        let currentProduct = null;   // store product details from API
-        let currentEmail = null;
-        let currentOtp = null;
-        let otpVerified = false;
+<script>
+    const SHEET_ID = '1D6zQ91MYfbQL4XSClSWffSTOfmDFJoO4hEdpENB0_RY';
+    const SHEET_NAME = 'LISTING_API_Data';
+    const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${SHEET_NAME}`;
 
-        // References to modals
-        const productInfoModal = document.getElementById('productInfoModal');
-        const emailModal = document.getElementById('emailModal');
-        const otpModal = document.getElementById('otpModal');
-        const productInfoBody = document.getElementById('productInfoBody');
-        const emailInput = document.getElementById('emailInput');
-        const emailError = document.getElementById('emailError');
-        const emailSuccess = document.getElementById('emailSuccess');
-        const otpInput = document.getElementById('otpInput');
-        const otpError = document.getElementById('otpError');
-        const otpSuccess = document.getElementById('otpSuccess');
-        const sendOtpBtn = document.getElementById('sendOtpBtn');
-        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-        const finalOkBtn = document.getElementById('finalOkBtn');
+    let allProducts = [];
+    let allCountries = [];
+    let selectedCountries = [];
+    let selectedProductCodes = new Set(); // for compare
 
-        // When user clicks "Buy Now" on a product card
-        function initiateCheckout(productData) {
-            currentProduct = productData;
-            // Display product info in modal
-            const priceDollars = (productData.price / 100).toFixed(2);
-            productInfoBody.innerHTML = `
-                <div class="product-info-line"><strong>Product:</strong> ${productData.product_name || productData.name}</div>
-                <div class="product-info-line"><strong>Package Code:</strong> ${productData.package_code || productData.packageCode}</div>
-                <div class="product-info-line"><strong>Data:</strong> ${(productData.volume_gb || (productData.volume_bytes / 1073741824).toFixed(2))} GB</div>
-                <div class="product-info-line"><strong>Validity:</strong> ${productData.validity_days || productData.duration} days</div>
-                <div class="product-info-line"><strong>Price:</strong> $${priceDollars}</div>
-            `;
-            productInfoModal.style.display = 'flex';
+    // DOM elements
+    const selectedChipsDiv = document.getElementById('selectedChips');
+    const openDropdownBtn = document.getElementById('openDropdownBtn');
+    const showPlansBtn = document.getElementById('showPlansBtn');
+    const dropdownOverlay = document.getElementById('dropdownOverlay');
+    const closeDropdownBtn = document.getElementById('closeDropdownBtn');
+    const cancelDropdownBtn = document.getElementById('cancelDropdownBtn');
+    const applyCountriesBtn = document.getElementById('applyCountriesBtn');
+    const countryFilterInput = document.getElementById('countryFilterInput');
+    const checkboxContainer = document.getElementById('checkboxContainer');
+    const statsPlaceholder = document.getElementById('statsPlaceholder');
+    const productListDiv = document.getElementById('productList');
+    const compareBtn = document.getElementById('compareBtn');
+    const compareModal = document.getElementById('compareModal');
+    const closeCompareBtn = document.getElementById('closeCompareBtn');
+
+    function parseCSVLine(line) {
+        const result = [];
+        let inQuote = false;
+        let current = '';
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') inQuote = !inQuote;
+            else if (ch === ',' && !inQuote) {
+                result.push(current.trim());
+                current = '';
+            } else current += ch;
         }
+        result.push(current.trim());
+        return result;
+    }
 
-        // Step 1: Cancel product modal
-        document.getElementById('cancelProductBtn').addEventListener('click', () => {
-            productInfoModal.style.display = 'none';
-            currentProduct = null;
-        });
+    function stripQuotes(str) { return str ? str.replace(/^"|"$/g, '') : ''; }
+    function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')) : ''; }
 
-        // Step 1 -> Step 2: Proceed to email modal
-        document.getElementById('proceedToEmailBtn').addEventListener('click', () => {
-            productInfoModal.style.display = 'none';
-            emailModal.style.display = 'flex';
-        });
+    async function loadData() {
+        try {
+            statsPlaceholder.innerText = 'Loading product catalog...';
+            const response = await fetch(CSV_URL);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const csvText = await response.text();
+            const lines = csvText.split(/\r?\n/).filter(l => l.trim().length > 0);
+            if (lines.length < 2) throw new Error('No data rows');
 
-        // Cancel email modal
-        document.getElementById('cancelEmailBtn').addEventListener('click', () => {
-            emailModal.style.display = 'none';
-            emailInput.value = '';
-            emailError.style.display = 'none';
-            emailSuccess.style.display = 'none';
-        });
+            const headers = parseCSVLine(lines[0]);
+            const priceIdx = headers.findIndex(h => h === 'DSIM Price');
+            const nameIdx = headers.findIndex(h => h === 'API name');
+            const locationIdx = headers.findIndex(h => h === 'API locationName');
+            const volumeIdx = headers.findIndex(h => h === 'CSV GBs_Binary');
+            const durationIdx = headers.findIndex(h => h === 'API duration');
+            const packageCodeIdx = headers.findIndex(h => h === 'API packageCode');
+            const operatorsIdx = headers.findIndex(h => h === 'CSV Operators');
+            const countryCodesIdx = headers.findIndex(h => h === 'CSV Country Codes');
+            const activeTypeIdx = headers.findIndex(h => h === 'API activeType');
+            const ipExportIdx = headers.findIndex(h => h === 'API ipExport');
+            const smsStatusIdx = headers.findIndex(h => h === 'API smsStatus');
+            const topUpIdx = headers.findIndex(h => h === 'API suppotTopUpType');
 
-        // Send OTP
-        sendOtpBtn.addEventListener('click', async () => {
-            const email = emailInput.value.trim();
-            if (!email || !email.includes('@') || !email.includes('.')) {
-                emailError.textContent = 'Please enter a valid email address.';
-                emailError.style.display = 'block';
-                return;
-            }
-            emailError.style.display = 'none';
-            sendOtpBtn.disabled = true;
-            sendOtpBtn.textContent = 'Sending...';
-            try {
-                // Call ActivePieces webhook to generate and send OTP
-                const response = await fetch('YOUR_SEND_OTP_WEBHOOK_URL/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: email })
+            if (priceIdx === -1 || nameIdx === -1 || locationIdx === -1)
+                throw new Error('Required columns not found');
+
+            const countrySet = new Set();
+            const products = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const row = parseCSVLine(lines[i]);
+                if (row.length <= Math.max(priceIdx, nameIdx, locationIdx)) continue;
+                const locationRaw = row[locationIdx] || '';
+                if (!locationRaw.trim()) continue;
+
+                const countries = locationRaw.split(',').map(c => stripQuotes(c.trim())).filter(c => c);
+                if (!countries.length) continue;
+
+                let price = row[priceIdx];
+                if (price && !price.startsWith('$') && !isNaN(parseFloat(price)))
+                    price = '$' + parseFloat(price).toFixed(2);
+
+                products.push({
+                    name: row[nameIdx] || 'Unnamed',
+                    price: price || 'N/A',
+                    volume: (volumeIdx !== -1 && row[volumeIdx]) ? row[volumeIdx] : '—',
+                    duration: (durationIdx !== -1 && row[durationIdx]) ? row[durationIdx] : '—',
+                    packageCode: (packageCodeIdx !== -1 && row[packageCodeIdx]) ? row[packageCodeIdx] : '',
+                    countries: countries,
+                    operators: (operatorsIdx !== -1) ? row[operatorsIdx] : '',
+                    countryCodes: (countryCodesIdx !== -1) ? row[countryCodesIdx] : '',
+                    activeType: (activeTypeIdx !== -1) ? row[activeTypeIdx] : '',
+                    ipExport: (ipExportIdx !== -1) ? row[ipExportIdx] : '',
+                    smsStatus: (smsStatusIdx !== -1) ? row[smsStatusIdx] : '',
+                    supportTopUp: (topUpIdx !== -1) ? row[topUpIdx] : ''
                 });
-                const result = await response.json();
-                if (result.success) {
-                    currentEmail = email;
-                    emailSuccess.textContent = 'OTP sent to your email. Please check your inbox.';
-                    emailSuccess.style.display = 'block';
-                    // Move to OTP modal after short delay
-                    setTimeout(() => {
-                        emailModal.style.display = 'none';
-                        otpModal.style.display = 'flex';
-                        emailInput.value = '';
-                        emailSuccess.style.display = 'none';
-                        sendOtpBtn.disabled = false;
-                        sendOtpBtn.textContent = 'Send OTP';
-                    }, 1500);
+                countries.forEach(c => countrySet.add(c));
+            }
+
+            allProducts = products;
+            allCountries = Array.from(countrySet).sort();
+            updateStatsMessage(0);
+            updateChipsDisplay();
+        } catch (err) {
+            console.error(err);
+            statsPlaceholder.innerHTML = '❌ Failed to load data. Check sheet publication.';
+            productListDiv.innerHTML = '<div class="no-results">Error loading product data.</div>';
+        }
+    }
+
+    function updateStatsMessage(matches) {
+        const totalProducts = allProducts.length;
+        const totalDestinations = allCountries.length;
+        const selectedCount = selectedCountries.length;
+        if (selectedCount === 0) {
+            statsPlaceholder.innerHTML = `📦 ${totalProducts} total products · 🌏 ${totalDestinations} destinations (select countries)`;
+        } else {
+            statsPlaceholder.innerHTML = `📦 ${matches} products available for selected ${selectedCount} countries · 🌏 ${totalDestinations} destinations`;
+        }
+    }
+
+    function updateChipsDisplay() {
+        selectedChipsDiv.innerHTML = '';
+        if (!selectedCountries.length) {
+            selectedChipsDiv.innerHTML = '<span style="color: #6c7e91; font-size: 0.85rem;">✈️ No countries selected — click "Select Countries" to choose</span>';
+            return;
+        }
+        selectedCountries.forEach(country => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerHTML = `${country} <button data-country="${country}">✕</button>`;
+            chip.querySelector('button').addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedCountries = selectedCountries.filter(c => c !== country);
+                updateChipsDisplay();
+                clearProductListAndResetCompare();
+                updateStatsMessage(0);
+            });
+            selectedChipsDiv.appendChild(chip);
+        });
+    }
+
+    function clearProductListAndResetCompare() {
+        productListDiv.innerHTML = '<div class="no-results">🌎 Click "Show plans" to update results.</div>';
+        selectedProductCodes.clear();
+        compareBtn.disabled = true;
+        compareBtn.textContent = 'Compare Selected (0)';
+    }
+
+    function renderCheckboxList(filteredCountries) {
+        checkboxContainer.innerHTML = '';
+        (filteredCountries || allCountries).forEach(country => {
+            const isChecked = selectedCountries.includes(country);
+            const div = document.createElement('div');
+            div.className = 'checkbox-item';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.checked = isChecked;
+            cb.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    if (!selectedCountries.includes(country)) selectedCountries.push(country);
                 } else {
-                    emailError.textContent = result.error || 'Failed to send OTP. Please try again.';
-                    emailError.style.display = 'block';
-                    sendOtpBtn.disabled = false;
-                    sendOtpBtn.textContent = 'Send OTP';
+                    selectedCountries = selectedCountries.filter(c => c !== country);
                 }
-            } catch (err) {
-                emailError.textContent = 'Network error. Please try again.';
-                emailError.style.display = 'block';
-                sendOtpBtn.disabled = false;
-                sendOtpBtn.textContent = 'Send OTP';
-            }
+            });
+            const label = document.createElement('label');
+            label.textContent = country;
+            div.appendChild(cb);
+            div.appendChild(label);
+            checkboxContainer.appendChild(div);
         });
+    }
 
-        // Cancel OTP modal
-        document.getElementById('cancelOtpBtn').addEventListener('click', () => {
-            otpModal.style.display = 'none';
-            otpInput.value = '';
-            otpError.style.display = 'none';
-            otpSuccess.style.display = 'none';
-            verifyOtpBtn.style.display = 'inline-block';
-            finalOkBtn.style.display = 'none';
-            otpVerified = false;
-        });
+    function openDropdown() {
+        const term = countryFilterInput.value.trim().toLowerCase();
+        const filtered = term ? allCountries.filter(c => c.toLowerCase().includes(term)) : allCountries;
+        renderCheckboxList(filtered);
+        dropdownOverlay.style.display = 'flex';
+    }
 
-        // Verify OTP
-        verifyOtpBtn.addEventListener('click', async () => {
-            const otp = otpInput.value.trim();
-            if (!otp || otp.length < 4) {
-                otpError.textContent = 'Please enter the OTP you received.';
-                otpError.style.display = 'block';
-                return;
-            }
-            otpError.style.display = 'none';
-            verifyOtpBtn.disabled = true;
-            verifyOtpBtn.textContent = 'Verifying...';
-            try {
-                const response = await fetch('YOUR_VERIFY_OTP_WEBHOOK_URL/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: currentEmail, otp: otp })
-                });
-                const result = await response.json();
-                if (result.valid) {
-                    currentOtp = otp;
-                    otpVerified = true;
-                    otpSuccess.textContent = 'Email verified successfully!';
-                    otpSuccess.style.display = 'block';
-                    // Change button to OK
-                    verifyOtpBtn.style.display = 'none';
-                    finalOkBtn.style.display = 'inline-block';
+    function closeDropdown() {
+        dropdownOverlay.style.display = 'none';
+        countryFilterInput.value = '';
+    }
+
+    function applySelection() {
+        updateChipsDisplay();
+        closeDropdown();
+        clearProductListAndResetCompare();
+        updateStatsMessage(0);
+    }
+
+    function cancelSelection() { closeDropdown(); }
+
+    // AND filter: product must include ALL selected countries
+    function filterProductsAndRender() {
+        if (!allProducts.length) return;
+        let filtered = [];
+        if (selectedCountries.length === 0) {
+            filtered = [];
+        } else {
+            filtered = allProducts.filter(product =>
+                selectedCountries.every(selectedCountry => product.countries.includes(selectedCountry))
+            );
+        }
+        renderProductCards(filtered);
+        updateStatsMessage(filtered.length);
+        // Reset compare selection
+        selectedProductCodes.clear();
+        compareBtn.disabled = true;
+        compareBtn.textContent = 'Compare Selected (0)';
+    }
+
+    function renderProductCards(products) {
+        if (products.length === 0) {
+            productListDiv.innerHTML = '<div class="no-results">🌎 No eSIM plans include all selected countries. Try selecting fewer or different countries.</div>';
+            return;
+        }
+        let html = '';
+        for (const prod of products) {
+            let volumeDisplay = prod.volume;
+            if (!isNaN(parseFloat(volumeDisplay)) && isFinite(volumeDisplay)) volumeDisplay = `${volumeDisplay} GB`;
+            let durationDisplay = prod.duration;
+            if (durationDisplay !== '—' && !isNaN(parseInt(durationDisplay))) durationDisplay = `${durationDisplay} days`;
+            const isChecked = selectedProductCodes.has(prod.packageCode);
+            html += `
+                <div class="product-card" data-package="${escapeHtml(prod.packageCode)}">
+                    <div class="product-name">${escapeHtml(prod.name)}</div>
+                    <div class="product-details">
+                        <span class="detail-item">📶 ${escapeHtml(volumeDisplay)}</span>
+                        <span class="detail-item">⏱️ ${escapeHtml(durationDisplay)}</span>
+                    </div>
+                    <div class="price">${escapeHtml(prod.price)}</div>
+                    <div class="package-code">📦 ${escapeHtml(prod.packageCode)}</div>
+                    <div class="card-actions">
+                        <label class="compare-checkbox">
+                            <input type="checkbox" class="compare-select" data-code="${escapeHtml(prod.packageCode)}" ${isChecked ? 'checked' : ''}> Compare
+                        </label>
+                            <button class="btn-buy" data-package="${escapeHtml(prod.packageCode)}" 
+                                data-name="${escapeHtml(prod.name)}" 
+                                data-price="${escapeHtml(prod.price.replace('$', ''))}">
+                                Buy Now
+                            </button>
+                            <button class="btn-more-details" data-package="${escapeHtml(prod.packageCode)}">More Details</button>
+                    </div>
+                    <div class="more-details-content" id="details-${escapeHtml(prod.packageCode)}"></div>
+                </div>
+            `;
+        }
+        productListDiv.innerHTML = html;
+
+        // Attach event listeners after rendering
+        document.querySelectorAll('.compare-select').forEach(cb => {
+            cb.addEventListener('change', (e) => {
+                const code = cb.getAttribute('data-code');
+                if (cb.checked) {
+                    selectedProductCodes.add(code);
                 } else {
-                    otpError.textContent = 'Invalid OTP. Please try again.';
-                    otpError.style.display = 'block';
-                    verifyOtpBtn.disabled = false;
-                    verifyOtpBtn.textContent = 'Next';
+                    selectedProductCodes.delete(code);
                 }
-            } catch (err) {
-                otpError.textContent = 'Verification failed. Please try again.';
-                otpError.style.display = 'block';
-                verifyOtpBtn.disabled = false;
-                verifyOtpBtn.textContent = 'Next';
-            }
+                const count = selectedProductCodes.size;
+                compareBtn.disabled = count === 0;
+                compareBtn.textContent = `Compare Selected (${count})`;
+            });
         });
 
-        // Final OK: proceed to Stripe checkout
-        finalOkBtn.addEventListener('click', async () => {
-            if (!otpVerified) return;
-            finalOkBtn.disabled = true;
-            finalOkBtn.textContent = 'Processing...';
-            try {
-                // Call Stripe checkout webhook with verified email and product details
-                const response = await fetch('YOUR_STRIPE_CHECKOUT_WEBHOOK_URL/sync', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: currentEmail,
-                        product: currentProduct
-                    })
-                });
-                const result = await response.json();
-                if (result.sessionUrl) {
-                    window.location.href = result.sessionUrl;
-                } else {
-                    alert('Could not create checkout session. Please contact support.');
-                    finalOkBtn.disabled = false;
-                    finalOkBtn.textContent = 'OK';
+        // ***** DEBUGGING BUY BUTTON: shows raw JSON response *****
+        document.querySelectorAll('.btn-buy').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const packageCode = btn.getAttribute('data-package');
+                
+                try {
+                    const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/rRokAxPVoqRkNlxc0Hqzd/sync', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ packageCode: packageCode })
+                    });
+                    
+                    const fullProduct = await response.json();
+                    console.log('Full product response:', fullProduct);
+                    
+                    // Show raw JSON in alert to see the actual structure
+                    alert('Response from ActivePieces:\n' + JSON.stringify(fullProduct, null, 2));
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to fetch product details. Check console.');
                 }
-            } catch (err) {
-                alert('Payment initiation failed. Please try again.');
-                finalOkBtn.disabled = false;
-                finalOkBtn.textContent = 'OK';
-            }
+            });
         });
+        // ***** END OF DEBUGGING BUY BUTTON *****
 
-        // ========== Integrate with your existing product card "Buy Now" button ==========
-        // You need to modify the product card rendering to call initiateCheckout(productData)
-        // The productData should come from your ActivePieces fetch.
-        // Example: when you fetch fullProduct, call initiateCheckout(fullProduct) instead of showing alert.
-    </script>
+        document.querySelectorAll('.btn-more-details').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const pkg = btn.getAttribute('data-package');
+                const detailsDiv = document.getElementById(`details-${pkg}`);
+                if (!detailsDiv) return;
+                const product = allProducts.find(p => p.packageCode === pkg);
+                if (!product) return;
+                if (detailsDiv.innerHTML.trim() === '') {
+                    let detailsHtml = '<div style="margin-top: 0.5rem;">';
+                    if (product.smsStatus) detailsHtml += `<p><strong>SMS:</strong> ${escapeHtml(product.smsStatus)}</p>`;
+                    if (product.supportTopUp) detailsHtml += `<p><strong>Top-up:</strong> ${escapeHtml(product.supportTopUp)}</p>`;
+                    if (product.activeType) detailsHtml += `<p><strong>Activation:</strong> ${escapeHtml(product.activeType)}</p>`;
+                    if (product.ipExport) detailsHtml += `<p><strong>IP Route:</strong> ${escapeHtml(product.ipExport)}</p>`;
+                    if (product.operators) detailsHtml += `<p><strong>Operators:</strong> ${escapeHtml(product.operators)}</p>`;
+                    if (product.countryCodes) detailsHtml += `<p><strong>Country Codes:</strong> ${escapeHtml(product.countryCodes)}</p>`;
+                    if (!product.smsStatus && !product.supportTopUp && !product.activeType && !product.operators) {
+                        detailsHtml += '<p>No additional details available for this plan.</p>';
+                    }
+                    detailsHtml += '</div>';
+                    detailsDiv.innerHTML = detailsHtml;
+                }
+                detailsDiv.classList.toggle('show');
+            });
+        });
+    }
+
+    function showCompareModal() {
+        const selectedProducts = allProducts.filter(p => selectedProductCodes.has(p.packageCode));
+        if (selectedProducts.length === 0) return;
+        
+        // Build comparison table
+        let tableHtml = '<table class="compare-table"><thead><tr><th>Feature</th>';
+        for (const prod of selectedProducts) {
+            tableHtml += `<th>${escapeHtml(prod.name)}</th>`;
+        }
+        tableHtml += '</tr></thead><tbody>';
+        
+        // Compare rows
+        const features = [
+            { label: 'Package Code', get: p => p.packageCode },
+            { label: 'Price', get: p => p.price },
+            { label: 'Volume', get: p => p.volume ? (isNaN(p.volume) ? p.volume : p.volume + ' GB') : '—' },
+            { label: 'Duration', get: p => p.duration ? (isNaN(p.duration) ? p.duration : p.duration + ' days') : '—' },
+            { label: 'SMS', get: p => p.smsStatus || '—' },
+            { label: 'Top-up', get: p => p.supportTopUp || '—' },
+            { label: 'Activation', get: p => p.activeType || '—' },
+            { label: 'IP Route', get: p => p.ipExport || '—' }
+        ];
+        for (const feat of features) {
+            tableHtml += `<tr><th>${feat.label}</th>`;
+            for (const prod of selectedProducts) {
+                tableHtml += `<td>${escapeHtml(feat.get(prod) || '—')}</td>`;
+            }
+            tableHtml += '</tr>';
+        }
+        tableHtml += '</tbody></td>';
+        document.getElementById('compareTableContainer').innerHTML = tableHtml;
+        compareModal.style.display = 'flex';
+    }
+
+    // Event listeners
+    openDropdownBtn.addEventListener('click', openDropdown);
+    closeDropdownBtn.addEventListener('click', closeDropdown);
+    cancelDropdownBtn.addEventListener('click', cancelSelection);
+    applyCountriesBtn.addEventListener('click', applySelection);
+    showPlansBtn.addEventListener('click', filterProductsAndRender);
+    compareBtn.addEventListener('click', showCompareModal);
+    closeCompareBtn.addEventListener('click', () => compareModal.style.display = 'none');
+    window.addEventListener('click', (e) => { if (e.target === compareModal) compareModal.style.display = 'none'; });
+    countryFilterInput.addEventListener('input', (e) => {
+        const term = e.target.value.trim().toLowerCase();
+        const filtered = term ? allCountries.filter(c => c.toLowerCase().includes(term)) : allCountries;
+        renderCheckboxList(filtered);
+    });
+    dropdownOverlay.addEventListener('click', (e) => { if (e.target === dropdownOverlay) closeDropdown(); });
+
+    loadData();
+</script>
 </body>
 </html>
