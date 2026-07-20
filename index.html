@@ -582,6 +582,9 @@
                 const countriesText = await countriesResponse.text();
                 allCountries = parseCSV(countriesText);
                 
+                console.log('Countries raw data:', countriesText.substring(0, 500));
+                console.log('Parsed countries:', allCountries);
+                
                 // Populate Country Dropdown
                 populateCountryDropdown();
 
@@ -600,32 +603,64 @@
         }
 
         function parseCSV(csvText) {
-            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (lines.length < 2) return [];
-            
-            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
+            const headers = parseCSVLine(lines[0]);
             const data = [];
-            
+
             for (let i = 1; i < lines.length; i++) {
-                const values = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || [];
-                const cleanValues = values.map(v => v ? v.trim().replace(/^"|"$/g, '') : '');
+                const values = parseCSVLine(lines[i]);
                 
                 const obj = {};
                 headers.forEach((header, index) => {
-                    obj[header] = cleanValues[index] || '';
+                    obj[header] = values[index] || '';
                 });
                 data.push(obj);
             }
             return data;
         }
 
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
         function populateCountryDropdown() {
             countrySelect.innerHTML = '<option value="">Select countries...</option>';
-            
+
+            if (!allCountries || allCountries.length === 0) {
+                console.warn('No countries data available');
+                return;
+            }
+
             // Extract unique country names from the 'name' column
             const countryNames = [...new Set(allCountries.map(c => c.name).filter(n => n))];
             countryNames.sort();
-            
+
+            console.log('Populating dropdown with', countryNames.length, 'countries:', countryNames);
+
             countryNames.forEach(country => {
                 const option = document.createElement('option');
                 option.value = country;
